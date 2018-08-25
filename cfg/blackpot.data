@@ -1,0 +1,6 @@
+classes= 1
+train  = ../../project/data/blackpot/train.txt
+valid  = ../../project/data/blackpot/test.txt
+names = ../../project/data/blackpot/blackpot.names
+backup = ../../project/backup/blackpot
+

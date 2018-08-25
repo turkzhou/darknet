@@ -1091,7 +1091,7 @@ void transpose_matrix(float *a, int rows, int cols)
             transpose[y*rows + x] = a[x*cols + y];
         }
     }
-    memcpy(a, transpose, rows*cols*sizeof(float));
+    memcpy(a, transpose, rows*cols*sizeof(float));//void *memcpy(void *dest, const void *src, size_t n);
     free(transpose);
 }
 
