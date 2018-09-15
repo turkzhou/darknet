@@ -20,6 +20,7 @@ static int demo_classes;
 static network *net;
 static image buff [3];
 static image buff_letter[3];
+static image buff_letter[3];
 static int buff_index = 0;
 static CvCapture * cap;
 static IplImage  * ipl;
@@ -91,7 +92,7 @@ void *detect_in_thread(void *ptr)
     layer l = net->layers[net->n-1];
     float *X = buff_letter[(buff_index+2)%3].data;
     network_predict(net, X);
-
+    fprintf(stderr,"thread detect once.\n");
     /*
        if(l.type == DETECTION){
        get_detection_boxes(l, 1, 1, demo_thresh, probs, boxes, 0);
@@ -140,6 +141,7 @@ void *detect_in_thread(void *ptr)
 
 void *fetch_in_thread(void *ptr)
 {
+    fprintf(stderr,"buff_index:%d.\n",buff_index);
     int status = fill_image_from_stream(cap, buff[buff_index]);
     letterbox_image_into(buff[buff_index], net->w, net->h, buff_letter[buff_index]);
     if(status == 0) demo_done = 1;
@@ -182,7 +184,7 @@ void *detect_loop(void *ptr)
     }
 }
 
-void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int delay, char *prefix, int avg_frames, float hier, int w, int h, int frames, int fullscreen)
+void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int delay, char *prefix, int avg_frames, float hier, int w, int h, int frames, int fullscreen, const char* savepath)
 {
     //demo_frame = avg_frames;
     image **alphabet = load_alphabet();
@@ -214,13 +216,13 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
         cap = cvCaptureFromCAM(cam_index);
 
         if(w){
-            cvSetCaptureProperty(cap, CV_CAP_PROP_FRAME_WIDTH, w);
+            cvSetCaptureProperty(cap, CV_CAP_PROP_FRAME_WIDTH, w);//1280
         }
         if(h){
-            cvSetCaptureProperty(cap, CV_CAP_PROP_FRAME_HEIGHT, h);
+            cvSetCaptureProperty(cap, CV_CAP_PROP_FRAME_HEIGHT, h);//480
         }
         if(frames){
-            cvSetCaptureProperty(cap, CV_CAP_PROP_FPS, frames);
+            cvSetCaptureProperty(cap, CV_CAP_PROP_FPS, frames);//60
         }
     }
 
@@ -236,6 +238,7 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
 
     int count = 0;
     if(!prefix){
+        fprintf(stderr, "w:%d,  h:%d,  frames:%d,  fullscreen:%d.\n",w,h,frames,fullscreen);
         cvNamedWindow("Demo", CV_WINDOW_NORMAL); 
         if(fullscreen){
             cvSetWindowProperty("Demo", CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
@@ -255,10 +258,12 @@ void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const ch
             fps = 1./(what_time_is_it_now() - demo_time);
             demo_time = what_time_is_it_now();
             display_in_thread(0);
-        }else{
-            char name[256];
-            sprintf(name, "%s_%08d", prefix, count);
-            save_image(buff[(buff_index + 1)%3], name);
+            #if 1
+              char name[256];
+              sprintf(name, "%s%s_%08d", savepath, prefix, count);
+              save_image(buff_letter[(buff_index + 1)%3], name);
+              fprintf(stderr,"while loop save once\n");
+            #endif
         }
         pthread_join(fetch_thread, 0);
         pthread_join(detect_thread, 0);
@@ -356,7 +361,7 @@ pthread_join(detect_thread, 0);
 }
 */
 #else
-void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int delay, char *prefix, int avg, float hier, int w, int h, int frames, int fullscreen)
+void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int delay, char *prefix, int avg, float hier, int w, int h, int frames, int fullscreen, const char* savepath)
 {
     fprintf(stderr, "Demo needs OpenCV for webcam images.\n");
 }

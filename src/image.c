@@ -657,18 +657,26 @@ void flush_stream_buffer(CvCapture *cap, int n)
 
 image get_image_from_stream(CvCapture *cap)
 {
+    IplImage *dst=cvCreateImage(cvSize(416,416),8,3);
     IplImage* src = cvQueryFrame(cap);
-    if (!src) return make_empty_image(0,0,0);
-    image im = ipl_to_image(src);
+    cvSetImageROI(src, cvRect(0, 0, 416, 416 ));
+    cvCopy(src,dst,NULL);
+    cvResetImageROI(src);
+    if (!dst) return make_empty_image(0,0,0);
+    image im = ipl_to_image(dst);
     rgbgr_image(im);
     return im;
 }
 
 int fill_image_from_stream(CvCapture *cap, image im)
 {
+    IplImage *dst=cvCreateImage(cvSize(416,416),8,3); 
     IplImage* src = cvQueryFrame(cap);
-    if (!src) return 0;
-    ipl_into_image(src, im);
+    cvSetImageROI(src, cvRect(0, 0, 416, 416 ));
+    cvCopy(src,dst,NULL);
+    cvResetImageROI(src);
+    if (!dst) return 0;
+    ipl_into_image(dst, im);
     rgbgr_image(im);
     return 1;
 }
